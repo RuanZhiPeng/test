@@ -1,0 +1,35 @@
+    @RequestMapping("/list")
+    public String users(@RequestParam(value = "pn", defaultValue = "1") Integer pn,
+            @RequestParam(value = "ps", defaultValue = "10") Integer ps, Model model,
+            @RequestParam(value = "sp", defaultValue = "") String search) {
+        // 有表单提交的化建议通过额外写一个转发方法重定向到页面
+        // 没有表单提交就直接转发来目标页面
+        // userService.
+        System.out.println("分页获取用户的逻辑");
+        PageHelper.startPage(pn, ps);
+        // 拿到分页查出的结果，不带条件的，页面会带来条件
+        // 规则，将这个条件作为用户名或者用户昵称的查询条件
+        // select * from t_user where loginacct like ? or username=?
+        // List<TUser> list = userService.getAll();
+        TUserExample example = new TUserExample();
+
+        // 第一次创建的条件，默认使用and连接的
+        Criteria criteria1 = example.createCriteria();
+        Criteria criteria2 = example.createCriteria();
+        if (!search.trim().equals("")) {
+            criteria1.andLoginacctLike("%" + search + "%");
+            criteria2.andUsernameLike("%" + search + "%");
+        }
+        example.or(criteria2);
+
+        List<TUser> list = userService.getAllByCondition(example);
+
+        // 去页面显示的数据
+        PageInfo<TUser> info = new PageInfo<>(list, 5);
+
+        model.addAttribute("user_info", info);
+        model.addAttribute("sp", search);
+        System.out.println("提交的查询参数：" + search);
+        // 直接转到页面；
+        return "manager/permission/user";
+    }
